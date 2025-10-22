@@ -54,12 +54,17 @@ class MyApp extends StatelessWidget {
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: baseColor,
-            foregroundColor: Colors.white,
+            foregroundColor: Colors.white, // текст всегда белый
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
             textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            foregroundColor: Colors.white, // текст на "синеватых" кнопках
           ),
         ),
         cardTheme: CardThemeData(
@@ -96,6 +101,16 @@ class MyApp extends StatelessWidget {
           brightness: Brightness.dark,
         ),
         appBarTheme: const AppBarTheme(centerTitle: true),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            foregroundColor: Colors.white, // текст всегда белый
+          ),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            foregroundColor: Colors.white, // текст на кнопках
+          ),
+        ),
         cardTheme: CardThemeData(
           color: Colors.black26,
           shape: RoundedRectangleBorder(
