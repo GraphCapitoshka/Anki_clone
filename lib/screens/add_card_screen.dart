@@ -19,36 +19,6 @@ class _AddCardScreenState extends State<AddCardScreen> {
           _backController.text.trim().isNotEmpty;
 
   @override
-  void dispose() {
-    _frontController.dispose();
-    _backController.dispose();
-    super.dispose();
-  }
-
-  Future<void> save() async {
-    try {
-      await DbService.instance.addCard(
-        widget.deckId,
-        _frontController.text.trim(),
-        _backController.text.trim(),
-        DateTime.now(), // первая дата повторения — сегодня
-        1, // первый интервал — 1 день
-      );
-
-
-      if (mounted) Navigator.pop(context, true); // возвращаем true
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка при сохранении карточки: $e')),
-      );
-    }
-  }
-
-  void _onTextChanged() {
-    setState(() {}); // обновляем состояние, чтобы кнопка активировалась/деактивировалась
-  }
-
-  @override
   void initState() {
     super.initState();
     _frontController.addListener(_onTextChanged);
@@ -56,27 +26,87 @@ class _AddCardScreenState extends State<AddCardScreen> {
   }
 
   @override
+  void dispose() {
+    _frontController.dispose();
+    _backController.dispose();
+    super.dispose();
+  }
+
+  void _onTextChanged() => setState(() {});
+
+  Future<void> _save() async {
+    try {
+      await DbService.instance.addCard(
+        widget.deckId,
+        _frontController.text.trim(),
+        _backController.text.trim(),
+        DateTime.now(),
+        1,
+      );
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('error_saving_card'.tr(args: [e.toString()]))),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+
     return Scaffold(
-      appBar: AppBar(title: Text('add_card'.tr())),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      appBar: AppBar(
+        title: Text('add_card'.tr()),
+        backgroundColor: color,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            TextField(
-              controller: _frontController,
-              decoration: InputDecoration(labelText: 'question'.tr()),
+            Card(
+              elevation: 3,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _frontController,
+                      maxLines: 2,
+                      decoration: InputDecoration(
+                        labelText: 'question'.tr(),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.help_outline),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _backController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        labelText: 'answer'.tr(),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.text_snippet_outlined),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _backController,
-              decoration: InputDecoration(labelText: 'answer'.tr()),
-            ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: canSave ? save : null,
+              onPressed: canSave ? _save : null,
               icon: const Icon(Icons.save),
               label: Text('save'.tr()),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size.fromHeight(56),
+                backgroundColor: color,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+                elevation: 4,
+              ),
             ),
           ],
         ),

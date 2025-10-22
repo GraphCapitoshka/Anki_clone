@@ -49,20 +49,18 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
 
   Future<void> _startReview() async {
     if (cards.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('no_cards'.tr())));
+      _showSnack('no_cards'.tr());
       return;
     }
 
     final dueCards = await DbService.instance.getDueFlashcards(widget.deck.id);
 
     if (dueCards.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('no_due_cards'.tr())));
+      _showSnack('no_due_cards'.tr());
       return;
     }
 
-    final result = await Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => ReviewScreen(cards: dueCards)),
     );
@@ -72,158 +70,208 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
 
   Future<void> _startFullReview() async {
     if (cards.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('no_cards'.tr())));
+      _showSnack('no_cards'.tr());
       return;
     }
 
-    final allCards = List<Flashcard>.from(cards);
-
-    final result = await Navigator.push(
+    await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => ReviewScreen(cards: allCards)),
+      MaterialPageRoute(builder: (_) => ReviewScreen(cards: List.from(cards))),
     );
 
     await _loadCards();
   }
 
+  void _showSnack(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: Theme.of(context).colorScheme.primary,
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        backgroundColor: Colors.indigo,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(widget.deck.name),
-            Chip(
-              label: Text('${cards.length}'),
-              backgroundColor: Colors.indigo[200],
-            ),
-          ],
-        ),
-      ),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : cards.isEmpty
-          ? Center(child: Text('no_cards'.tr()))
-          : Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: cards.length,
-              itemBuilder: (context, index) {
-                final c = cards[index];
-                final isDue = c.nextReview.isBefore(DateTime.now());
-                return Card(
-                  color: isDue ? Colors.green[50] : Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                  elevation: 4,
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    title: Text(
-                      c.question,
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    subtitle: Flexible(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            c.answer,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            _getNextReviewText(c),
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: c.nextReview.isBefore(DateTime.now()) ? Colors.green : Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+    final color = Theme.of(context).colorScheme.primary;
 
-                    trailing: Wrap(
-                      spacing: 8,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.indigo),
-                          onPressed: () async {
-                            final updated = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) =>
-                                      EditCardScreen(card: c)),
-                            );
-                            if (updated == true) await _loadCards();
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline,
-                              color: Colors.red),
-                          onPressed: () => _deleteCard(c.id!),
-                        ),
-                      ],
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => ViewCardScreen(card: c)),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
-          ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.deck.name, overflow: TextOverflow.ellipsis),
+        actions: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () async => await _startReview(),
-                  icon: const Icon(Icons.play_arrow),
-                  label: Text('start_review'.tr()),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    minimumSize: const Size.fromHeight(50),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    elevation: 3,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ElevatedButton.icon(
-                  onPressed: () async => await _startFullReview(),
-                  icon: const Icon(Icons.play_circle_fill),
-                  label: Text('start_full_review'.tr()),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    minimumSize: const Size.fromHeight(50),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    elevation: 3,
-                  ),
-                ),
-              ],
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Chip(
+              backgroundColor: color.withOpacity(0.15),
+              label: Text(
+                '${cards.length}',
+                style: TextStyle(color: color, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: loading
+            ? const Center(child: CircularProgressIndicator())
+            : cards.isEmpty
+            ? Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.style_outlined,
+                  size: 72, color: Colors.grey),
+              const SizedBox(height: 12),
+              Text(
+                'no_cards'.tr(),
+                style: const TextStyle(
+                  fontSize: 18,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+        )
+            : RefreshIndicator(
+          onRefresh: _loadCards,
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: cards.length,
+            itemBuilder: (context, index) {
+              final c = cards[index];
+              final isDue = c.nextReview.isBefore(DateTime.now());
+
+              return Card(
+                elevation: 3,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => ViewCardScreen(card: c)),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        colors: isDue
+                            ? [
+                          Colors.green.withOpacity(0.1),
+                          Colors.green.withOpacity(0.05),
+                        ]
+                            : [
+                          color.withOpacity(0.08),
+                          color.withOpacity(0.03),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          c.question,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          c.answer,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 15),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          _getNextReviewText(c),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isDue
+                                ? Colors.green
+                                : Colors.grey[600],
+                          ),
+                        ),
+                        const Divider(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit,
+                                  color: Colors.indigo),
+                              onPressed: () async {
+                                final updated = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        EditCardScreen(card: c),
+                                  ),
+                                );
+                                if (updated == true) _loadCards();
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline,
+                                  color: Colors.red),
+                              onPressed: () => _deleteCard(c.id!),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ElevatedButton.icon(
+                onPressed: _startReview,
+                icon: const Icon(Icons.play_arrow),
+                label: Text('start_review'.tr()),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                  backgroundColor: Colors.green,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton.icon(
+                onPressed: _startFullReview,
+                icon: const Icon(Icons.all_inclusive),
+                label: Text('start_full_review'.tr()),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                  backgroundColor: color,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: _addCard,
-        backgroundColor: Colors.indigo,
-        tooltip: 'add_card'.tr(),
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: Text('add_card'.tr()),
       ),
     );
   }
@@ -231,7 +279,7 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
   String _getNextReviewText(Flashcard c) {
     final nowUtc = DateTime.now().toUtc();
     final nextUtc = c.nextReview.toUtc();
-    final isDue = !nextUtc.isAfter(nowUtc); // true, если next <= now
+    final isDue = !nextUtc.isAfter(nowUtc);
 
     if (isDue) {
       return '🟢 ${'available_for_review'.tr()}';

@@ -37,13 +37,19 @@ class _ViewCardScreenState extends State<ViewCardScreen>
     } else {
       _controller.forward();
     }
-    _showBack = !_showBack;
+    setState(() => _showBack = !_showBack);
   }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Просмотр карточки')),
+      backgroundColor: colorScheme.surface,
+      appBar: AppBar(
+        backgroundColor: colorScheme.primary,
+        title: const Text('Просмотр карточки'),
+      ),
       body: Center(
         child: GestureDetector(
           onTap: _flipCard,
@@ -62,9 +68,9 @@ class _ViewCardScreenState extends State<ViewCardScreen>
                     ? Transform(
                   alignment: Alignment.center,
                   transform: Matrix4.rotationY(pi),
-                  child: _buildCardBack(),
+                  child: _buildCardBack(context),
                 )
-                    : _buildCardFront(),
+                    : _buildCardFront(context),
               );
             },
           ),
@@ -73,38 +79,43 @@ class _ViewCardScreenState extends State<ViewCardScreen>
     );
   }
 
-  Widget _buildCardFront() {
+  Widget _buildCardFront(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primaryContainer;
     return _buildCard(
       content: widget.card.question,
       label: 'Нажмите, чтобы увидеть ответ',
-      color: Colors.blue[100],
+      color: color,
+      icon: Icons.help_outline,
     );
   }
 
-  Widget _buildCardBack() {
+  Widget _buildCardBack(BuildContext context) {
+    final color = Theme.of(context).colorScheme.secondaryContainer;
     return _buildCard(
       content: widget.card.answer,
       label: 'Нажмите, чтобы вернуться',
-      color: Colors.green[100],
+      color: color,
+      icon: Icons.check_circle_outline,
     );
   }
 
   Widget _buildCard({
     required String content,
     required String label,
-    Color? color,
+    required Color color,
+    required IconData icon,
   }) {
     return Container(
       width: MediaQuery.of(context).size.width * 0.85,
-      height: MediaQuery.of(context).size.height * 0.5,
+      height: MediaQuery.of(context).size.height * 0.55,
       decoration: BoxDecoration(
-        color: color ?? Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: color,
+        borderRadius: BorderRadius.circular(20),
         boxShadow: const [
           BoxShadow(
             color: Colors.black26,
-            blurRadius: 6,
-            offset: Offset(2, 2),
+            blurRadius: 8,
+            offset: Offset(2, 3),
           ),
         ],
       ),
@@ -112,9 +123,15 @@ class _ViewCardScreenState extends State<ViewCardScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          Icon(icon, size: 36, color: Colors.black54),
+          const SizedBox(height: 16),
           Text(
             content,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              height: 1.4,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),

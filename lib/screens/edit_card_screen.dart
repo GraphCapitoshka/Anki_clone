@@ -23,58 +23,91 @@ class _EditCardScreenState extends State<EditCardScreen> {
     _answerController = TextEditingController(text: widget.card.answer);
   }
 
+  @override
+  void dispose() {
+    _questionController.dispose();
+    _answerController.dispose();
+    super.dispose();
+  }
+
   Future<void> _saveCard() async {
-    if (_formKey.currentState!.validate()) {
-      final updatedCard = Flashcard(
-        id: widget.card.id,
-        deckId: widget.card.deckId,
-        question: _questionController.text.trim(),
-        answer: _answerController.text.trim(),
-        nextReview: widget.card.nextReview,
-        interval: widget.card.interval,
-        ease: widget.card.ease,
-        correctStreak: widget.card.correctStreak,
-      );
+    if (!_formKey.currentState!.validate()) return;
 
+    final updatedCard = Flashcard(
+      id: widget.card.id,
+      deckId: widget.card.deckId,
+      question: _questionController.text.trim(),
+      answer: _answerController.text.trim(),
+      nextReview: widget.card.nextReview,
+      interval: widget.card.interval,
+      ease: widget.card.ease,
+      correctStreak: widget.card.correctStreak,
+    );
 
-      await DbService.instance.updateFlashcard(updatedCard);
-      Navigator.pop(context, true);
-    }
+    await DbService.instance.updateFlashcard(updatedCard);
+    if (mounted) Navigator.pop(context, true);
   }
 
   @override
   Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+
     return Scaffold(
-      appBar: AppBar(title: Text('edit_card'.tr())),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      appBar: AppBar(
+        title: Text('edit_card'.tr()),
+        backgroundColor: color,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _questionController,
-                decoration: InputDecoration(labelText: 'front'.tr()),
-                validator: (value) =>
-                value == null || value.isEmpty ? 'field_required'.tr() : null,
+          child: Card(
+            elevation: 3,
+            shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: _questionController,
+                    maxLines: 2,
+                    decoration: InputDecoration(
+                      labelText: 'front'.tr(),
+                      prefixIcon: const Icon(Icons.help_outline),
+                      border: const OutlineInputBorder(),
+                    ),
+                    validator: (v) =>
+                    v == null || v.isEmpty ? 'field_required'.tr() : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _answerController,
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      labelText: 'back'.tr(),
+                      prefixIcon: const Icon(Icons.text_snippet_outlined),
+                      border: const OutlineInputBorder(),
+                    ),
+                    validator: (v) =>
+                    v == null || v.isEmpty ? 'field_required'.tr() : null,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: _saveCard,
+                    icon: const Icon(Icons.save),
+                    label: Text('save'.tr()),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(56),
+                      backgroundColor: color,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                      elevation: 4,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _answerController,
-                decoration: InputDecoration(labelText: 'back'.tr()),
-                validator: (value) =>
-                value == null || value.isEmpty ? 'field_required'.tr() : null,
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: _saveCard,
-                icon: const Icon(Icons.save),
-                label: Text('save'.tr()),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(50),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

@@ -28,25 +28,30 @@ class _DeckListScreenState extends State<DeckListScreen> {
   }
 
   Future<void> _addDeck() async {
-    final TextEditingController _controller = TextEditingController();
+    final TextEditingController controller = TextEditingController();
 
     final result = await showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text('add_deck'.tr()),
         content: TextField(
-          controller: _controller,
+          controller: controller,
           decoration: InputDecoration(
-            hintText: 'deck_name'.tr(),
+            labelText: 'deck_name'.tr(),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
           ),
         ),
+        actionsPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text('cancel'.tr()),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, _controller.text.trim()),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
             child: Text('save'.tr()),
           ),
         ],
@@ -61,15 +66,21 @@ class _DeckListScreenState extends State<DeckListScreen> {
 
   void _switchLocale() {
     final current = context.locale;
-    final next = current.languageCode == 'ru' ? const Locale('en') : const Locale('ru');
+    final next =
+    current.languageCode == 'ru' ? const Locale('en') : const Locale('ru');
     context.setLocale(next);
   }
 
   @override
   Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('app_title'.tr()),
+        title: Text(
+          'app_title'.tr(),
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.language),
@@ -78,34 +89,97 @@ class _DeckListScreenState extends State<DeckListScreen> {
           ),
         ],
       ),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : decks.isEmpty
-          ? Center(child: Text('no_decks'.tr()))
-          : ListView.builder(
-        padding: const EdgeInsets.all(12),
-        itemCount: decks.length,
-        itemBuilder: (context, index) {
-          final deck = decks[index];
-          return Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: ListTile(
-              title: Text(deck.name),
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => DeckDetailScreen(deck: deck)),
-                );
-                await _loadDecks();
-              },
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: loading
+            ? const Center(child: CircularProgressIndicator())
+            : decks.isEmpty
+            ? Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.style_outlined,
+                  size: 72, color: Colors.grey),
+              const SizedBox(height: 12),
+              Text(
+                'no_decks'.tr(),
+                style: const TextStyle(
+                    fontSize: 18, color: Colors.grey),
+              ),
+            ],
+          ),
+        )
+            : RefreshIndicator(
+          onRefresh: _loadDecks,
+          child: GridView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: decks.length,
+            gridDelegate:
+            const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 4 / 3,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
             ),
-          );
-        },
+            itemBuilder: (context, index) {
+              final deck = decks[index];
+              return InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DeckDetailScreen(deck: deck),
+                    ),
+                  );
+                  await _loadDecks();
+                },
+                child: Card(
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        colors: [
+                          color.withOpacity(0.15),
+                          color.withOpacity(0.05),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.folder_rounded,
+                            color: color, size: 36),
+                        const Spacer(),
+                        Text(
+                          deck.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: _addDeck,
-        child: const Icon(Icons.add),
-        tooltip: 'add_deck'.tr(),
+        icon: const Icon(Icons.add),
+        label: Text('add_deck'.tr()),
       ),
     );
   }

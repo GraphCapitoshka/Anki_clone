@@ -33,9 +33,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
 
   Future<void> _handleAnswer(bool correct) async {
     setState(() => loading = true);
-
     await DbService.instance.updateFlashcardProgress(currentCard, correct);
-
     setState(() => loading = false);
     _nextCard();
   }
@@ -44,6 +42,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text('review_completed'.tr()),
         content: Text('all_cards_reviewed'.tr()),
         actions: [
@@ -54,11 +53,12 @@ class _ReviewScreenState extends State<ReviewScreen> {
         ],
       ),
     ).then((_) => Navigator.pop(context, true));
-
   }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     if (widget.cards.isEmpty) {
       return Scaffold(
         appBar: AppBar(title: Text('review'.tr())),
@@ -66,75 +66,122 @@ class _ReviewScreenState extends State<ReviewScreen> {
       );
     }
 
-    final card = currentCard;
-
     return Scaffold(
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
+        backgroundColor: colorScheme.primary,
         title: Text('review'.tr()),
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            // Индикатор прогресса
+            LinearProgressIndicator(
+              value: (currentIndex + 1) / widget.cards.length,
+              color: colorScheme.primary,
+              backgroundColor: colorScheme.surfaceVariant,
+              minHeight: 6,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            const SizedBox(height: 16),
             Text(
               '${currentIndex + 1} / ${widget.cards.length}',
               style: const TextStyle(fontSize: 18),
             ),
             const SizedBox(height: 20),
+
             Expanded(
               child: FlipCard(
                 flipOnTouch: true,
-                front: _buildCardFace(card.question, Colors.blue.shade100),
-                back: _buildCardFace(card.answer, Colors.green.shade100),
+                front: _buildCardFace(
+                  currentCard.question,
+                  colorScheme.primaryContainer,
+                  Icons.help_outline,
+                ),
+                back: _buildCardFace(
+                  currentCard.answer,
+                  colorScheme.secondaryContainer,
+                  Icons.check_circle_outline,
+                ),
               ),
             ),
             const SizedBox(height: 20),
-            if (showAnswer)
-              Row(
+
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: showAnswer
+                  ? Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ElevatedButton.icon(
                     onPressed: () => _handleAnswer(false),
-                    icon: const Icon(Icons.close, color: Colors.red),
+                    icon: const Icon(Icons.close),
                     label: Text('forgot'.tr()),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red.shade100,
+                      backgroundColor:
+                      Colors.redAccent.withOpacity(0.15),
+                      foregroundColor: Colors.red,
+                      minimumSize: const Size(130, 50),
                     ),
                   ),
                   ElevatedButton.icon(
                     onPressed: () => _handleAnswer(true),
-                    icon: const Icon(Icons.check, color: Colors.green),
+                    icon: const Icon(Icons.check),
                     label: Text('remembered'.tr()),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green.shade100,
+                      backgroundColor:
+                      Colors.greenAccent.withOpacity(0.15),
+                      foregroundColor: Colors.green,
+                      minimumSize: const Size(130, 50),
                     ),
                   ),
                 ],
               )
-            else
-              ElevatedButton(
+                  : ElevatedButton.icon(
+                key: const ValueKey('showAnswer'),
                 onPressed: () => setState(() => showAnswer = true),
-                child: Text('show_answer'.tr()),
+                icon: const Icon(Icons.visibility),
+                label: Text('show_answer'.tr()),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(56),
+                  backgroundColor: colorScheme.primary,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
               ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCardFace(String text, Color color) {
+  Widget _buildCardFace(String text, Color color, IconData icon) {
     return Card(
       color: color,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            text,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 6,
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 40, color: Colors.black54),
+              const SizedBox(height: 20),
+              Text(
+                text,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  height: 1.4,
+                ),
+              ),
+            ],
           ),
         ),
       ),
