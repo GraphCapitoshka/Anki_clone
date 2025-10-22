@@ -7,8 +7,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
 
-  // Инициализация базы данных
-  await DbService.instance.init();
+  // Инициализация базы данных (копирование при первом запуске)
+  await DbService.instance.database;
 
   runApp(
     EasyLocalization(
@@ -19,6 +19,7 @@ void main() async {
     ),
   );
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

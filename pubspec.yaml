@@ -36,4 +36,5 @@ flutter:
   assets:
     - assets/langs/ru.json
     - assets/langs/en.json
+    - assets/database/prepopulated.db
 

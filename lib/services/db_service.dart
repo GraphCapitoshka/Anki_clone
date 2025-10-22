@@ -1,7 +1,7 @@
-// lib/services/db_service.dart
-
-import 'package:sqflite/sqflite.dart';
+import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 import '../models/deck.dart';
 import '../models/flashcard.dart';
 
@@ -22,41 +22,19 @@ class DbService {
     await database; // просто вызывает геттер и создаёт БД
   }
 
-
   Future<Database> _initDatabase() async {
     final databasesPath = await getDatabasesPath();
     final path = join(databasesPath, 'anki_app.db');
 
-    // Открываем (или создаём) базу
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _onCreate,
-    );
-  }
+    // Если базы ещё нет, копируем из assets
+    if (!await File(path).exists()) {
+      final data = await rootBundle.load('assets/database/prepopulated.db');
+      final bytes = data.buffer.asUint8List();
+      await File(path).writeAsBytes(bytes);
+    }
 
-  Future<void> _onCreate(Database db, int version) async {
-    await db.execute('''
-      CREATE TABLE decks (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL
-      )
-    ''');
-
-    await db.execute('''
-  CREATE TABLE flashcards (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  deck_id INTEGER,
-  question TEXT,
-  answer TEXT,
-  next_review TEXT,
-  interval INTEGER,
-  ease REAL DEFAULT 2.5,
-  correct_streak INTEGER DEFAULT 0
-)
-
-''');
-
+    // Открываем существующую базу (готовый файл)
+    return await openDatabase(path, version: 1);
   }
 
   // ---------------- Decks ----------------
@@ -69,7 +47,9 @@ class DbService {
   Future<List<Deck>> getDecks() async {
     final db = await database;
     final rows = await db.query('decks', orderBy: 'id DESC');
-    return rows.map((r) => Deck(id: r['id'] as int, name: r['name'] as String)).toList();
+    return rows
+        .map((r) => Deck(id: r['id'] as int, name: r['name'] as String))
+        .toList();
   }
 
   Future<int> deleteDeck(int id) async {
@@ -96,7 +76,6 @@ class DbService {
     });
   }
 
-
   Future<List<Flashcard>> getFlashcards(int deckId) async {
     final db = await database;
     final rows = await db.query(
@@ -107,7 +86,6 @@ class DbService {
     );
 
     return rows.map((r) {
-      // Безопасный парсинг next_review с учётом часовых поясов
       DateTime parsedNext;
       final rawNext = r['next_review'] as String?;
       if (rawNext != null && rawNext.isNotEmpty) {
@@ -133,8 +111,6 @@ class DbService {
     }).toList();
   }
 
-
-
   Future<int> deleteFlashcard(int id) async {
     final db = await database;
     return await db.delete('flashcards', where: 'id = ?', whereArgs: [id]);
@@ -144,20 +120,10 @@ class DbService {
     final db = await database;
     return await db.update(
       'flashcards',
-      card.toMap(), // <-- вот здесь ключевое изменение
+      card.toMap(),
       where: 'id = ?',
       whereArgs: [card.id],
     );
-  }
-
-
-  // Закрыть базу (если нужно)
-  Future<void> close() async {
-    final db = _db;
-    if (db != null) {
-      await db.close();
-      _db = null;
-    }
   }
 
   Future<void> updateFlashcardProgress(Flashcard card, bool correct) async {
@@ -173,8 +139,9 @@ class DbService {
       card.ease = (card.ease * 0.9).clamp(1.3, 2.5);
     }
 
-    // ❗ Храним дату в UTC, чтобы не было смещения по часам
-    card.nextReview = DateTime.now().toUtc().add(Duration(days: card.interval));
+    // Сохраняем nextReview в UTC
+    card.nextReview =
+        DateTime.now().toUtc().add(Duration(days: card.interval));
 
     await db.update(
       'flashcards',
@@ -182,7 +149,7 @@ class DbService {
         'question': card.question,
         'answer': card.answer,
         'deck_id': card.deckId,
-        'next_review': card.nextReview.toIso8601String(), // UTC
+        'next_review': card.nextReview.toIso8601String(),
         'interval': card.interval,
         'ease': card.ease,
         'correct_streak': card.correctStreak,
@@ -191,7 +158,6 @@ class DbService {
       whereArgs: [card.id],
     );
   }
-
 
   Future<List<Flashcard>> getDueFlashcards(int deckId) async {
     final db = await database;
@@ -206,7 +172,11 @@ class DbService {
     return List.generate(maps.length, (i) => Flashcard.fromMap(maps[i]));
   }
 
-
-
-
+  Future<void> close() async {
+    final db = _db;
+    if (db != null) {
+      await db.close();
+      _db = null;
+    }
+  }
 }
