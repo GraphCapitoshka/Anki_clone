@@ -59,25 +59,39 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
       return;
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => FutureBuilder<List<Flashcard>>(
-        future: DbService.instance.getDueFlashcards(widget.deck.id),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Scaffold(
-              appBar: AppBar(title: Text('review'.tr())),
-              body: Center(child: Text('no_due_cards'.tr())),
-            );
-          }
-          return ReviewScreen(cards: snapshot.data!);
-        },
-      ),
-      ),
-    );
+    Future<void> _startReview() async {
+      if (cards.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('no_cards'.tr())),
+        );
+        return;
+      }
+
+      final dueCards = await DbService.instance.getDueFlashcards(widget.deck.id);
+
+      if (dueCards.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('no_due_cards'.tr())),
+        );
+        return;
+      }
+
+      // 🔹 Ждём, пока пользователь завершит повторение
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ReviewScreen(cards: dueCards),
+        ),
+      );
+
+      // 🔹 После возврата — перезагружаем карточки
+      if (result == true) {
+        await _loadCards();
+      } else {
+        await _loadCards(); // даже если просто вернулся, обновим на всякий
+      }
+    }
+
   }
 
   @override
@@ -160,7 +174,7 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton.icon(
-              onPressed: _startReview,
+              onPressed: () async => await _startReview(),
               icon: const Icon(Icons.play_arrow),
               label: Text('start_review'.tr()),
               style: ElevatedButton.styleFrom(

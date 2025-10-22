@@ -53,7 +53,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
           ),
         ],
       ),
-    ).then((_) => Navigator.pop(context));
+    ).then((_) => Navigator.pop(context, true));
+
   }
 
   @override
