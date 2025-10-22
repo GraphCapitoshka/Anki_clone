@@ -51,7 +51,7 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
     }
   }
 
-  void _startReview() {
+  Future<void> _startReview() async {
     if (cards.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('no_cards'.tr())),
@@ -59,40 +59,31 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
       return;
     }
 
-    Future<void> _startReview() async {
-      if (cards.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('no_cards'.tr())),
-        );
-        return;
-      }
+    final dueCards = await DbService.instance.getDueFlashcards(widget.deck.id);
 
-      final dueCards = await DbService.instance.getDueFlashcards(widget.deck.id);
-
-      if (dueCards.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('no_due_cards'.tr())),
-        );
-        return;
-      }
-
-      // 🔹 Ждём, пока пользователь завершит повторение
-      final result = await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ReviewScreen(cards: dueCards),
-        ),
+    if (dueCards.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('no_due_cards'.tr())),
       );
-
-      // 🔹 После возврата — перезагружаем карточки
-      if (result == true) {
-        await _loadCards();
-      } else {
-        await _loadCards(); // даже если просто вернулся, обновим на всякий
-      }
+      return;
     }
 
+    // 🔹 Ждём, пока пользователь завершит повторение
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ReviewScreen(cards: dueCards),
+      ),
+    );
+
+    // 🔹 После возврата — перезагружаем карточки
+    if (result == true) {
+      await _loadCards();
+    } else {
+      await _loadCards(); // даже если просто вернулся, обновим на всякий
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {

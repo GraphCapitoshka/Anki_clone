@@ -24,5 +24,6 @@
   "remembered": "Вспомнил",
   "review_completed": "Проверка завершена",
   "all_cards_reviewed": "Все карты проверены",
-  "ok": "ОК"
+  "ok": "ОК",
+  "no_due_cards": "Больше нет карт"
 }

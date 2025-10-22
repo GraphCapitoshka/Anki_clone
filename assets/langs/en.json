@@ -24,5 +24,6 @@
   "remembered": "Remembered",
   "review_completed": "Review completed",
   "all_cards_reviewed": "All cards reviewed",
-  "ok": "OK"
+  "ok": "OK",
+  "no_due_cards": "No due cards"
 }
