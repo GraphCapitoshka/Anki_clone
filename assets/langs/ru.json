@@ -25,5 +25,6 @@
   "review_completed": "Проверка завершена",
   "all_cards_reviewed": "Все карты проверены",
   "ok": "ОК",
-  "no_due_cards": "Больше нет карт"
+  "no_due_cards": "Больше нет карт",
+  "start_full_review": "Начать полное повторение"
 }

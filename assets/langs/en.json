@@ -25,5 +25,6 @@
   "review_completed": "Review completed",
   "all_cards_reviewed": "All cards reviewed",
   "ok": "OK",
-  "no_due_cards": "No due cards"
+  "no_due_cards": "No due cards",
+  "start_full_review": "Start full review"
 }

@@ -9,8 +9,6 @@ import 'edit_card_screen.dart';
 import 'package:intl/intl.dart';
 import 'view_card_screen.dart';
 
-
-
 class DeckDetailScreen extends StatefulWidget {
   final Deck deck;
   const DeckDetailScreen({super.key, required this.deck});
@@ -51,6 +49,7 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
     }
   }
 
+  // 🔹 Повторение только готовых к повторению карточек
   Future<void> _startReview() async {
     if (cards.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -68,7 +67,6 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
       return;
     }
 
-    // 🔹 Ждём, пока пользователь завершит повторение
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -76,14 +74,29 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
       ),
     );
 
-    // 🔹 После возврата — перезагружаем карточки
-    if (result == true) {
-      await _loadCards();
-    } else {
-      await _loadCards(); // даже если просто вернулся, обновим на всякий
-    }
+    await _loadCards();
   }
 
+  // 🔹 Повторение всех карточек
+  Future<void> _startFullReview() async {
+    if (cards.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('no_cards'.tr())),
+      );
+      return;
+    }
+
+    final allCards = List<Flashcard>.from(cards);
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ReviewScreen(cards: allCards),
+      ),
+    );
+
+    await _loadCards();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -120,12 +133,13 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
                           _getNextReviewText(c),
                           style: TextStyle(
                             fontSize: 13,
-                            color: c.nextReview.isBefore(DateTime.now()) ? Colors.green : Colors.grey[600],
+                            color: c.nextReview.isBefore(DateTime.now())
+                                ? Colors.green
+                                : Colors.grey[600],
                           ),
                         ),
                       ],
                     ),
-
                     trailing: Wrap(
                       spacing: 8,
                       children: [
@@ -155,8 +169,6 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
                         ),
                       );
                     },
-
-
                   ),
                 );
               },
@@ -164,16 +176,36 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton.icon(
-              onPressed: () async => await _startReview(),
-              icon: const Icon(Icons.play_arrow),
-              label: Text('start_review'.tr()),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            child: Column(
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    await _startReview();
+                  },
+                  icon: const Icon(Icons.play_arrow),
+                  label: Text('start_review'.tr()),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    await _startFullReview();
+                  },
+                  icon: const Icon(Icons.play_circle_fill),
+                  label: Text('start_full_review'.tr()),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -198,8 +230,4 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
       return '🕓 ${'next_review_on'.tr(args: [formattedDate])}';
     }
   }
-
-
 }
-
-
