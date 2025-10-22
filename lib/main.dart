@@ -1,14 +1,23 @@
+// lib/main.dart
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'services/db_service.dart';
 import 'screens/deck_list_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Полноэкранный режим без кнопок навигации и статус-бара
+  SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.immersiveSticky,
+  );
+
   await EasyLocalization.ensureInitialized();
 
-  // Инициализация базы данных (копирование при первом запуске)
-  await DbService.instance.database;
+  // Инициализация базы данных
+  await DbService.instance.init();
 
   runApp(
     EasyLocalization(
@@ -19,7 +28,6 @@ void main() async {
     ),
   );
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -55,7 +63,7 @@ class MyApp extends StatelessWidget {
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: baseColor,
-            foregroundColor: Colors.white, // текст всегда белый
+            foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
@@ -65,7 +73,7 @@ class MyApp extends StatelessWidget {
         ),
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
-            foregroundColor: Colors.white, // текст на "синеватых" кнопках
+            foregroundColor: Colors.white,
           ),
         ),
         cardTheme: CardThemeData(
@@ -102,16 +110,6 @@ class MyApp extends StatelessWidget {
           brightness: Brightness.dark,
         ),
         appBarTheme: const AppBarTheme(centerTitle: true),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            foregroundColor: Colors.white, // текст всегда белый
-          ),
-        ),
-        filledButtonTheme: FilledButtonThemeData(
-          style: FilledButton.styleFrom(
-            foregroundColor: Colors.white, // текст на кнопках
-          ),
-        ),
         cardTheme: CardThemeData(
           color: Colors.black26,
           shape: RoundedRectangleBorder(
