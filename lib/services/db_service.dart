@@ -107,18 +107,32 @@ class DbService {
     );
 
     return rows.map((r) {
+      // Безопасный парсинг next_review с учётом часовых поясов
+      DateTime parsedNext;
+      final rawNext = r['next_review'] as String?;
+      if (rawNext != null && rawNext.isNotEmpty) {
+        try {
+          parsedNext = DateTime.parse(rawNext).toLocal();
+        } catch (_) {
+          parsedNext = DateTime.now();
+        }
+      } else {
+        parsedNext = DateTime.now();
+      }
+
       return Flashcard(
         id: (r['id'] as int?) ?? 0,
         deckId: (r['deck_id'] as int?) ?? 0,
         question: (r['question'] as String?) ?? '',
         answer: (r['answer'] as String?) ?? '',
-        nextReview: DateTime.tryParse((r['next_review'] as String?) ?? '') ?? DateTime.now(),
+        nextReview: parsedNext,
         interval: (r['interval'] as int?) ?? 1,
         ease: ((r['ease'] is num) ? (r['ease'] as num).toDouble() : 2.5),
         correctStreak: (r['correct_streak'] as int?) ?? 0,
       );
     }).toList();
   }
+
 
 
   Future<int> deleteFlashcard(int id) async {
@@ -148,6 +162,7 @@ class DbService {
 
   Future<void> updateFlashcardProgress(Flashcard card, bool correct) async {
     final db = await database;
+
     if (correct) {
       card.correctStreak += 1;
       card.interval = (card.interval * card.ease).round();
@@ -158,15 +173,25 @@ class DbService {
       card.ease = (card.ease * 0.9).clamp(1.3, 2.5);
     }
 
-    card.nextReview = DateTime.now().add(Duration(days: card.interval));
+    // ❗ Храним дату в UTC, чтобы не было смещения по часам
+    card.nextReview = DateTime.now().toUtc().add(Duration(days: card.interval));
 
     await db.update(
       'flashcards',
-      card.toMap(),
+      {
+        'question': card.question,
+        'answer': card.answer,
+        'deck_id': card.deckId,
+        'next_review': card.nextReview.toIso8601String(), // UTC
+        'interval': card.interval,
+        'ease': card.ease,
+        'correct_streak': card.correctStreak,
+      },
       where: 'id = ?',
       whereArgs: [card.id],
     );
   }
+
 
   Future<List<Flashcard>> getDueFlashcards(int deckId) async {
     final db = await database;

@@ -182,17 +182,18 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
   }
 
   String _getNextReviewText(Flashcard c) {
-    final now = DateTime.now();
-    final next = c.nextReview ?? DateTime.now();
-    final isDue = !next.isAfter(now); // true если next <= now
+    final nowUtc = DateTime.now().toUtc();
+    final nextUtc = c.nextReview.toUtc();
+    final isDue = !nextUtc.isAfter(nowUtc); // true, если next <= now
 
     if (isDue) {
       return '🟢 ${'available_for_review'.tr()}';
     } else {
-      final formattedDate = DateFormat('dd.MM.yyyy HH:mm').format(next);
+      final formattedDate = DateFormat('dd.MM.yyyy HH:mm').format(c.nextReview.toLocal());
       return '🕓 ${'next_review_on'.tr(args: [formattedDate])}';
     }
   }
+
 
 }
 
