@@ -1,0 +1,39 @@
+name: anki_clone
+description: Простое приложение карточек Anki на Flutter с локальной SQLite-базой, современным UI и поддержкой RU/EN.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=2.18.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # --- База данных ---
+  sqflite: ^2.3.0
+  path: ^1.8.3
+
+  # --- UI и анимации ---
+  flip_card: ^0.7.0
+
+  # --- Локализация ---
+  easy_localization: ^3.0.1
+  intl: ^0.20.2
+  flutter_localizations:
+    sdk: flutter
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Если оставляем локализацию, указываем языковые файлы:
+  assets:
+    - assets/langs/ru.json
+    - assets/langs/en.json
+
