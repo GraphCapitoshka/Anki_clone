@@ -64,10 +64,70 @@ class _DeckListScreenState extends State<DeckListScreen> {
     }
   }
 
+  Future<void> _editDeck(Deck deck) async {
+    final controller = TextEditingController(text: deck.name);
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('edit_deck'.tr()),
+        content: TextField(
+          controller: controller,
+          decoration: InputDecoration(
+            labelText: 'deck_name'.tr(),
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('cancel'.tr()),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: Text('save'.tr()),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      await DbService.instance.updateDeck(deck.id!, result);
+      await _loadDecks();
+    }
+  }
+
+  Future<void> _confirmDeleteDeck(int? id) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('delete_deck_title'.tr()),
+        content: Text('delete_deck_confirm'.tr()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('cancel'.tr()),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('delete'.tr()),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && id != null) {
+      await DbService.instance.deleteDeck(id);
+      await _loadDecks();
+    }
+  }
+
   void _switchLocale() {
     final current = context.locale;
-    final next =
-    current.languageCode == 'ru' ? const Locale('en') : const Locale('ru');
+    final next = current.languageCode == 'ru'
+        ? const Locale('en')
+        : const Locale('ru');
     context.setLocale(next);
   }
 
@@ -123,22 +183,23 @@ class _DeckListScreenState extends State<DeckListScreen> {
             ),
             itemBuilder: (context, index) {
               final deck = decks[index];
-              return InkWell(
-                borderRadius: BorderRadius.circular(16),
-                onTap: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => DeckDetailScreen(deck: deck),
-                    ),
-                  );
-                  await _loadDecks();
-                },
-                child: Card(
-                  elevation: 3,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+              return Card(
+                elevation: 3,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            DeckDetailScreen(deck: deck),
+                      ),
+                    );
+                    await _loadDecks();
+                  },
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -155,8 +216,33 @@ class _DeckListScreenState extends State<DeckListScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.folder_rounded,
-                            color: color, size: 36),
+                        Row(
+                          mainAxisAlignment:
+                          MainAxisAlignment.spaceBetween,
+                          children: [
+                            Icon(Icons.folder_rounded,
+                                color: color, size: 36),
+                            PopupMenuButton<String>(
+                              onSelected: (value) {
+                                if (value == 'edit') {
+                                  _editDeck(deck);
+                                } else if (value == 'delete') {
+                                  _confirmDeleteDeck(deck.id);
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: 'edit',
+                                  child: Text('edit_deck'.tr()),
+                                ),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Text('delete'.tr()),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                         const Spacer(),
                         Text(
                           deck.name,

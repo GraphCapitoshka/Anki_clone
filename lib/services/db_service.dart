@@ -52,10 +52,10 @@ class DbService {
         .toList();
   }
 
-  Future<int> deleteDeck(int id) async {
-    final db = await database;
-    return await db.delete('decks', where: 'id = ?', whereArgs: [id]);
-  }
+  //Future<int> deleteDeck(int id) async {
+  //  final db = await database;
+  //  return await db.delete('decks', where: 'id = ?', whereArgs: [id]);
+  //}
 
   // ---------------- Flashcards ----------------
 
@@ -171,6 +171,27 @@ class DbService {
 
     return List.generate(maps.length, (i) => Flashcard.fromMap(maps[i]));
   }
+
+  Future<int> updateDeck(int id, String newName) async {
+    final db = await database;
+    return await db.update(
+      'decks',
+      {'name': newName},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> deleteDeck(int id) async {
+    final db = await database;
+
+    // Сначала удаляем все карточки этой колоды
+    await db.delete('flashcards', where: 'deck_id = ?', whereArgs: [id]);
+
+    // Затем удаляем саму колоду
+    await db.delete('decks', where: 'id = ?', whereArgs: [id]);
+  }
+
 
   Future<void> close() async {
     final db = _db;

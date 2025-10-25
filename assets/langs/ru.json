@@ -26,5 +26,11 @@
   "all_cards_reviewed": "Все карты проверены",
   "ok": "ОК",
   "no_due_cards": "Больше нет карт",
-  "start_full_review": "Начать полное повторение"
+  "start_full_review": "Начать полное повторение",
+  "edit_deck": "Редактировать колоду",
+  "delete": "Удалить",
+  "no_decks": "Нет колод",
+  "delete_deck_title": "Удалить колоду?",
+  "delete_deck_confirm": "Вы действительно желаете удалить колоду?"
+
 }

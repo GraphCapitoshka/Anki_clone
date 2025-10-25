@@ -26,5 +26,10 @@
   "all_cards_reviewed": "All cards reviewed",
   "ok": "OK",
   "no_due_cards": "No due cards",
-  "start_full_review": "Start full review"
+  "start_full_review": "Start full review",
+  "edit_deck": "Edit deck",
+  "delete": "Delete",
+  "no_decks": "No decks",
+  "delete_deck_title": "Delete deck?",
+  "delete_deck_confirm": "Are you sure you want to delete the deck?"
 }
