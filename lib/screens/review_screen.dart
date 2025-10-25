@@ -15,7 +15,6 @@ class ReviewScreen extends StatefulWidget {
 
 class _ReviewScreenState extends State<ReviewScreen> {
   int currentIndex = 0;
-  bool showAnswer = false;
   bool loading = false;
 
   Flashcard get currentCard => widget.cards[currentIndex];
@@ -24,7 +23,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
     if (currentIndex < widget.cards.length - 1) {
       setState(() {
         currentIndex++;
-        showAnswer = false;
       });
     } else {
       _showCompletionDialog();
@@ -93,6 +91,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
             ),
             const SizedBox(height: 20),
 
+            // Карточка
             Expanded(
               child: FlipCard(
                 flipOnTouch: true,
@@ -110,48 +109,31 @@ class _ReviewScreenState extends State<ReviewScreen> {
             ),
             const SizedBox(height: 20),
 
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: showAnswer
-                  ? Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: () => _handleAnswer(false),
-                    icon: const Icon(Icons.close),
-                    label: Text('forgot'.tr()),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                      Colors.redAccent.withOpacity(0.15),
-                      foregroundColor: Colors.red,
-                      minimumSize: const Size(130, 50),
-                    ),
+            // Кнопки "забыл / вспомнил" видны всегда
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () => _handleAnswer(false),
+                  icon: const Icon(Icons.close),
+                  label: Text('forgot'.tr()),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent.withOpacity(0.15),
+                    foregroundColor: Colors.red,
+                    minimumSize: const Size(130, 50),
                   ),
-                  ElevatedButton.icon(
-                    onPressed: () => _handleAnswer(true),
-                    icon: const Icon(Icons.check),
-                    label: Text('remembered'.tr()),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                      Colors.greenAccent.withOpacity(0.15),
-                      foregroundColor: Colors.green,
-                      minimumSize: const Size(130, 50),
-                    ),
-                  ),
-                ],
-              )
-                  : ElevatedButton.icon(
-                key: const ValueKey('showAnswer'),
-                onPressed: () => setState(() => showAnswer = true),
-                icon: const Icon(Icons.visibility),
-                label: Text('show_answer'.tr()),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(56),
-                  backgroundColor: colorScheme.primary,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
                 ),
-              ),
+                ElevatedButton.icon(
+                  onPressed: () => _handleAnswer(true),
+                  icon: const Icon(Icons.check),
+                  label: Text('remembered'.tr()),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.greenAccent.withOpacity(0.15),
+                    foregroundColor: Colors.green,
+                    minimumSize: const Size(130, 50),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

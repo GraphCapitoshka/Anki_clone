@@ -63,7 +63,7 @@ class MyApp extends StatelessWidget {
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: baseColor,
-            foregroundColor: Colors.white,
+            foregroundColor: Colors.white, // текст читаемый
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
@@ -73,15 +73,25 @@ class MyApp extends StatelessWidget {
         ),
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
-            foregroundColor: Colors.white,
+            foregroundColor: Colors.white, // текст читаемый на кнопках
+            backgroundColor: baseColor.withOpacity(0.9),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            textStyle: const TextStyle(fontWeight: FontWeight.w600),
           ),
         ),
-        cardTheme: CardThemeData(
-          color: Colors.white,
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: baseColor, // текст читаемый
+            textStyle: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ),
+        cardTheme: const CardThemeData(
           elevation: 2,
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.all(Radius.circular(16)),
           ),
         ),
         floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -109,11 +119,42 @@ class MyApp extends StatelessWidget {
           seedColor: baseColor,
           brightness: Brightness.dark,
         ),
-        appBarTheme: const AppBarTheme(centerTitle: true),
-        cardTheme: CardThemeData(
+        scaffoldBackgroundColor: Colors.black,
+        appBarTheme: const AppBarTheme(
+          centerTitle: true,
+          backgroundColor: Colors.black87,
+          foregroundColor: Colors.white,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            foregroundColor: Colors.white,
+            backgroundColor: Colors.deepPurpleAccent,
+            textStyle: const TextStyle(fontWeight: FontWeight.w600),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            foregroundColor: Colors.white,
+            backgroundColor: Colors.deepPurpleAccent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            textStyle: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.white,
+            textStyle: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ),
+        cardTheme: const CardThemeData(
           color: Colors.black26,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.all(Radius.circular(16)),
           ),
         ),
       ),
